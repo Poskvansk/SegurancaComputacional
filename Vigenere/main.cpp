@@ -1,10 +1,51 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace std;
 
 #define ENCRYPT 1
 #define DECRYPT 0
+
+void build_frequency_table() {
+
+    // Builds the frequency table for the alphabet in portuguese
+    
+    ifstream file("frequency_table.txt");
+    string line;
+    int i = 0;
+    vector<pair<char, double>> portuguese_table;
+    vector<pair<char, double>> english_table;
+    
+    // find specific word in the file    
+
+    bool portuguese = true;
+    while (getline(file, line)) {
+
+        if(line == "English") portuguese = false;
+
+        if(line.length() <= 1) continue;
+        if(line == "Portuguese" || line == "English") continue;
+
+        if(portuguese) {
+            portuguese_table.push_back(make_pair(line[0], stod(line.substr(2))));
+        }
+        else {
+            english_table.push_back(make_pair(line[0], stod(line.substr(2))));
+        }
+    }
+
+    // sort the table by second element of the pair
+    sort(portuguese_table.begin(), portuguese_table.end(), [](pair<char, double> &a, pair<char, double> &b) {
+        return a.second > b.second;
+    });
+
+    sort(english_table.begin(), english_table.end(), [](pair<char, double> &a, pair<char, double> &b) {
+        return a.second > b.second;
+    });
+}
 
 void normalize(string& text) {
 
@@ -100,20 +141,22 @@ void write_cipher(string filename, string cipher) {
 
 int main(int argc, char const *argv[]) {
     
-    string filename = "Plain_text.txt";
-    string message;
+    // string filename = "Plain_text.txt";
+    // string message;
 
-    read_message(filename, message);
+    // read_message(filename, message);
 
-    // cout << message << endl;
+    // // cout << message << endl;
 
-    string key = "limao";
+    // string key = "limao";
 
-    // cout << vigenere(message, key, ENCRYPT) << endl;
+    // // cout << vigenere(message, key, ENCRYPT) << endl;
     
-    string cipher = vigenere(message, key, ENCRYPT);
+    // string cipher = vigenere(message, key, ENCRYPT);
 
-    write_cipher("Cipher_text.txt", cipher);
+    // write_cipher("Cipher_text.txt", cipher);
+
+    build_frequency_table();
 
     return 0;
 }

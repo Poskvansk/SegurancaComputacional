@@ -21,24 +21,22 @@ unordered_map<char, double> english_table;
 void build_frequency_table() {
 
     // Builds the frequency table for the alphabet in portuguese
-    
     ifstream file("frequency_table.txt");
     string line;
 
-    bool portuguese = true;
+    enum languages language = PORTUGUESE;
+
     while (getline(file, line)) {
 
-        if(line == "English") portuguese = false;
+        if(line == "English") language = ENGLISH;
 
         if(line.length() <= 1) continue;
         if(line == "Portuguese" || line == "English") continue;
 
-        if(portuguese) {
-            // portuguese_table.push_back(make_pair(line[0], stod(line.substr(2))));
+        if(language == PORTUGUESE) {
             portuguese_table[line[0]] = stod(line.substr(2)) / 100;
         }
-        else {
-            // english_table.push_back(make_pair(line[0], stod(line.substr(2))));
+        else if (language == ENGLISH) {
             english_table[line[0]] = stod(line.substr(2)) / 100;
         }
     }
@@ -56,16 +54,15 @@ void normalize(string& text) {
 string vigenere(string message, string key, bool encrypt) {
 
     if(message.length() == 0) return message;
-
     if(key.length() == 0) return message;
 
-    string extended_key = key;
+    string extended_key;
     int pos = 0;
 
     normalize(message);
     normalize(key);
 
-    for(size_t i = key.length(); i < message.length(); i++) {
+    for(size_t i = 0; i < message.length(); i++) {
 
         if(message[i] < 97 || message[i] > 122) {
             extended_key += message[i];
@@ -79,28 +76,28 @@ string vigenere(string message, string key, bool encrypt) {
     string cipher = "";
     key = extended_key;
 
-    if(encrypt) {
-        
+    if(encrypt) {        
         for (size_t i = 0; i < message.length(); i++) {
 
             if(message[i] < 97 || message[i] > 122) {
                 cipher += message[i];
-                continue;
             }
-            cipher += ((message[i]-97 + key[i]-97) % 26) + 97;
+            else {
+                cipher += ((message[i]-97 + key[i]-97) % 26) + 97;
+            }
         }
     }
 
-    else {
-            
-            for (size_t i = 0; i < message.length(); i++) {
-    
-                if(message[i] < 97 || message[i] > 122) {
-                    cipher += message[i];
-                    continue;
-                }
+    else {            
+        for (size_t i = 0; i < message.length(); i++) {
+
+            if(message[i] < 97 || message[i] > 122) {
+                cipher += message[i];
+            }
+            else {
                 cipher += (( (message[i]-97) - (key[i]-97) + 26) % 26) + 97;
             }
+        }
     }
 
     return cipher;
@@ -255,19 +252,18 @@ int break_key_length(string cipher, int n) {
     return prob_key_len;    
 }   
 
-vector<double> get_gama(unordered_map<char, double> letter_count, int language) {
+vector<double> get_gama(unordered_map<char, double> letter_count, enum languages language) {
 
     vector<double> gama_vector;
-    
+
+    if(language != ENGLISH) language = PORTUGUESE;
+
     for(int i = 0; i < 26; i++) {
         double gama = 0;
 
         for(auto& lc : letter_count) {
 
             char shifted =((lc.first - 97) - i + 26) % 26 + 97;
-            // cout << lc.first << " shifted by " << (char)(i+97) << " = " << shifted << endl;
-            // cout << lc.first << " : " <<lc.second << " vs " << shifted << " : "<< english_table[shifted] << endl;
-            // cout << "----------------------------------------------------" << endl;
 
             double aux;
             if(language == PORTUGUESE) {
@@ -282,45 +278,25 @@ vector<double> get_gama(unordered_map<char, double> letter_count, int language) 
 
             gama += aux;
         }
-        // cout << "shifted by " << (char)(i + 97) << ": " << gama << endl;
         gama_vector.push_back(gama);
     }
 
     return gama_vector;
 }
 
-char get_shift(vector<char> coset, int language) {
+char get_shift(vector<char> coset, enum languages language) {
 
     unordered_map<char, double> letter_count;
-
-    // for(auto& c : coset) {
-    //     cout << c << " ";
-    // }
-    // cout << endl;
 
     for(auto& c : coset) {
         letter_count[c]++;
     }
 
-    // for(auto& l : letter_count) {
-    //     cout << l.first << ": " << l.second << endl;
-    // }
-
     for (auto& lc : letter_count) {
         lc.second /= coset.size();
     }
 
-    // for(auto& lc : letter_count) {
-    //     cout << lc.first << ": " << lc.second << endl;
-    // }
-    
     vector<double> gama_vector = get_gama(letter_count, language);
-
-    // for (auto& g : gama_vector) {
-    //     cout << g << " ";
-    // }
-    // cout << endl;
-
 
     // //get index of smallest element n gama_vector
     int index = 0;
@@ -333,41 +309,99 @@ char get_shift(vector<char> coset, int language) {
     return (char)(index + 97);
 }
 
-string break_key(string cipher, int key_length, int language) {
+string break_key(string cipher, int key_length, enum languages language) {
 
-    // cout << cipher << endl;
     cipher = get_normalized_cipher(cipher);
-    // cout << cipher << endl;
 
     vector<char> cosets[key_length];
 
     for(int i = 0; i < key_length; i++) {
+
         for(int j = 0; j < cipher.length(); j += key_length) {
-            if(cipher[j+i] < 97 || cipher[j+i] > 122) continue;
+
+            if(cipher[j+i] < 97 || cipher[j+i] > 122) {
+                continue;
+            }
+
             cosets[i].push_back(cipher[j+i]);
         }
     }
+
     string key = "";
-    // get_shift(cosets[0]);
+
     for(int i = 0; i < key_length; i++) {
         key += get_shift(cosets[i], language);
     }
-    // cout << "key: " << key << endl;
+
     return key;
 }
 
-void break_vigenere(string filename, int language) {
+string break_vigenere(string cipher, int n, enum languages language) {
 
-    string cipher;
-
-    read_message(filename, cipher);
-
-    int key_length = break_key_length(cipher, 4);
+    int key_length = break_key_length(cipher, n);
 
     string key = break_key(cipher, key_length, language);
 
     cout << "Probable key: " << key << endl;
-    cout << "Decrypted message: " << vigenere(cipher, key, DECRYPT) << endl;
+
+    return vigenere(cipher, key, DECRYPT);
+}
+
+void user_interface() {
+
+    bool run = true;
+
+    while(run) {
+
+        cout << "\n\n\n";
+        cout << "----------------------------------------------------" << endl;
+
+        cout << "Do you want to decrypt the message? (y/n)" << endl;
+        char answer;
+        cin >> answer;
+        
+        if(answer == 'y') {
+    
+            string cipher;
+            read_message("Cipher_text.txt", cipher);
+
+            cout << "What is the language of the message? (1: Portuguese, 2: English)" << endl;
+            int option;
+            cin >> option;
+            cout << '\n';
+        
+            cout << "What chunk size do you want to use?" << endl;
+            int chunk_size;
+            cin >> chunk_size;
+            cout << '\n';
+
+            string break_cipher = break_vigenere(cipher, chunk_size, (languages)option);
+
+            cout << "Decrypted message: " << break_cipher << endl;
+
+            string message;
+            read_message("Plain_text.txt", message);
+            normalize(message);
+            bool ans = message == break_cipher;
+            cout << ans << endl;
+
+            cout << "Does it look like the message was decrypted? (y/n)" << endl;
+            char again = 'n';
+            cin >> again;
+            if (again == 'y') run = false;
+        }
+
+        else if(answer == 'n') {
+            run = false;
+        }
+
+        else {
+            cout << "Invalid option" << endl;
+            getchar();
+        }
+
+        cout << "----------------------------------------------------" << endl;
+    }
 }
 
 int main(int argc, char const *argv[]) {
@@ -377,26 +411,20 @@ int main(int argc, char const *argv[]) {
 
     read_message(filename, message);
 
-    // // cout << message << endl;
+    // string key;
+    // cout << "Enter key: ";
+    // cin >> key;
+    // cout << endl;
 
-    string key;
-    cout << "Enter key: ";
-    cin >> key;
-    cout << endl;
+    string key = "abcdrfg";
 
-
-    // cout << vigenere(message, key, ENCRYPT) << endl;
-    
     string cipher = vigenere(message, key, ENCRYPT);
 
     write_cipher("Cipher_text.txt", cipher);
 
     build_frequency_table();
 
-    break_vigenere("Cipher_text.txt", PORTUGUESE);
-
-    // int n, m; cin >> n >> m;
-    // cout << gcd(n, m) << endl;
-
+    user_interface();
+ 
     return 0;
 }

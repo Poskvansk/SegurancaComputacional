@@ -171,18 +171,6 @@ vector<pair<string, vector<int>>> get_ngram_vector(unordered_map<string, vector<
         n_grams_vector.pop_back();
     }
 
-    // while(n_grams_vector.back().second.size() <= n_grams_vector.front().second.size() / 2) {
-    //     n_grams_vector.pop_back();
-    // }
-
-    // for(auto& n_gram : n_grams_vector) {
-
-    //     cout << n_gram.first << ": ";
-    //     for(auto& p : n_gram.second) cout << p << " ";
-    //     cout << endl;
-    // }
-    // cout << "----------------------------------------------------" << endl;
-
     return n_grams_vector;
 }
 
@@ -195,13 +183,6 @@ vector<vector<int>> get_distances(vector<pair<string, vector<int>>> n_grams_vect
             distances[i].push_back(n_grams_vector[i].second[j+1] - n_grams_vector[i].second[j]);
         }
     }
-
-    // print distances
-    // for(int i = 0; i < distances.size(); i++) {
-    //     cout << n_grams_vector[i].first << ": ";
-    //     for(auto& d : distances[i]) cout << d << " ";
-    //     cout << endl;
-    // }
 
     return distances;
 }
@@ -227,8 +208,18 @@ int break_key_length(string cipher, int n) {
         if(distances[i].size() <= 1) continue;
 
         for(int j = 0; j < distances[i].size()-1; j++) {
-            // cout << distances[i][j] << " " << distances[i][j+1] << endl;
             gcd_count[gcd(distances[i][j], distances[i][j+1])]++;
+        }
+    }
+
+    if(gcd_count.size() == 0) {
+
+        for(size_t i = 0; i < distances.size()-1; i++) {
+
+            int a = distances[i][0];
+            int b = distances[i+1][0];
+
+            gcd_count[gcd(a, b)]++;
         }
     }
 
@@ -240,13 +231,8 @@ int break_key_length(string cipher, int n) {
             prob_key_len = g.first;
         }
     }
-
-    // for(auto& gcd_count_i : gcd_count) {
-    //     cout << gcd_count_i.first << ": " << gcd_count_i.second << endl;
-    // }
-    
+  
     cout << "probable key length: " << prob_key_len << endl;
-
     cout << "----------------------------------------------------" << endl;
 
     return prob_key_len;    
@@ -377,7 +363,7 @@ void user_interface() {
 
             string break_cipher = break_vigenere(cipher, chunk_size, (languages)option);
 
-            cout << "Decrypted message: " << break_cipher << endl;
+            cout << "Decrypted message: \n" << break_cipher << endl;
 
             string message;
             read_message("Plain_text.txt", message);
@@ -411,12 +397,12 @@ int main(int argc, char const *argv[]) {
 
     read_message(filename, message);
 
-    // string key;
-    // cout << "Enter key: ";
-    // cin >> key;
-    // cout << endl;
+    string key;
+    cout << "Enter key: ";
+    cin >> key;
+    cout << endl;
 
-    string key = "abcdrfg";
+    // string key = "abcdrfg";
 
     string cipher = vigenere(message, key, ENCRYPT);
 

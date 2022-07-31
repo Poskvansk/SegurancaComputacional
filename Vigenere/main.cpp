@@ -146,6 +146,7 @@ string get_normalized_cipher(string cipher) {
     
     for(auto& c : cipher) {
         if (c < 97 || c > 122) continue;
+        if(c >= 'A' && c <= 'Z') c += 32;
         tmp += c;
     }
 
@@ -235,14 +236,14 @@ int break_key_length(string cipher, int n) {
     return prob_key_len;    
 }   
 
-vector<double> get_gama(unordered_map<char, double> letter_count, enum languages language) {
+vector<double> get_chi(unordered_map<char, double> letter_count, enum languages language) {
 
-    vector<double> gama_vector;
+    vector<double> chi_vector;
 
     if(language != ENGLISH) language = PORTUGUESE;
 
     for(int i = 0; i < 26; i++) {
-        double gama = 0;
+        double chi = 0;
 
         for(auto& lc : letter_count) {
 
@@ -259,12 +260,12 @@ vector<double> get_gama(unordered_map<char, double> letter_count, enum languages
                 aux /= english_table[shifted];
             }
 
-            gama += aux;
+            chi += aux;
         }
-        gama_vector.push_back(gama);
+        chi_vector.push_back(chi);
     }
 
-    return gama_vector;
+    return chi_vector;
 }
 
 char get_shift(vector<char> coset, enum languages language) {
@@ -279,12 +280,12 @@ char get_shift(vector<char> coset, enum languages language) {
         lc.second /= coset.size();
     }
 
-    vector<double> gama_vector = get_gama(letter_count, language);
+    vector<double> chi_vector = get_chi(letter_count, language);
 
-    // //get index of smallest element n gama_vector
+    // //get index of smallest element n chi_vector
     int index = 0;
-    for(int i = 0; i < gama_vector.size(); i++) {
-        if(gama_vector[i] < gama_vector[index]) {
+    for(int i = 0; i < chi_vector.size(); i++) {
+        if(chi_vector[i] < chi_vector[index]) {
             index = i;
         }
     }
@@ -389,6 +390,7 @@ void user_interface() {
 
 int main(int argc, char const *argv[]) {
     
+    // string filename = "Plain_text.txt";
     string filename = "english_text.txt";
     string message;
 
@@ -399,7 +401,7 @@ int main(int argc, char const *argv[]) {
     cin >> key;
     cout << endl;
 
-    // string key = "abcdrfg";
+    string key = "abcdrfg";
 
     string cipher = vigenere(message, key, ENCRYPT);
 
@@ -409,12 +411,5 @@ int main(int argc, char const *argv[]) {
 
     user_interface();
 
-    // char a;
-    // cin >> a;
-    // cout << "a = " << a << endl;
-    // cout << (int)a << endl;
-    // // if ( a == 'á') a = 'a';
-    // // cout << "a = " << a << endl;
- 
     return 0;
 }

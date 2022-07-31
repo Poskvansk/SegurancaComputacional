@@ -12,9 +12,6 @@ using namespace std;
 
 enum languages {ENGLISH, PORTUGUESE};
 
-// vector<pair<char, double>> portuguese_table;
-// vector<pair<char, double>> english_table;
-
 unordered_map<char, double> portuguese_table;
 unordered_map<char, double> english_table;
 
@@ -365,11 +362,11 @@ void user_interface() {
 
             cout << "Decrypted message: \n" << break_cipher << endl;
 
-            string message;
-            read_message("Plain_text.txt", message);
-            normalize(message);
-            bool ans = message == break_cipher;
-            cout << ans << endl;
+            // string message;
+            // read_message("Plain_text.txt", message);
+            // normalize(message);
+            // bool ans = message == break_cipher;
+            // cout << ans << endl;
 
             cout << "Does it look like the message was decrypted? (y/n)" << endl;
             char again = 'n';
@@ -392,7 +389,7 @@ void user_interface() {
 
 int main(int argc, char const *argv[]) {
     
-    string filename = "Plain_text.txt";
+    string filename = "english_text.txt";
     string message;
 
     read_message(filename, message);
@@ -411,6 +408,13 @@ int main(int argc, char const *argv[]) {
     build_frequency_table();
 
     user_interface();
+
+    // char a;
+    // cin >> a;
+    // cout << "a = " << a << endl;
+    // cout << (int)a << endl;
+    // // if ( a == 'á') a = 'a';
+    // // cout << "a = " << a << endl;
  
     return 0;
 }

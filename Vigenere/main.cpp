@@ -1,3 +1,6 @@
+// ALUNO: LUIS FILIPE SIQUEIRA RIBEIRO
+// MATRICULA: 18/0053906
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -390,8 +393,8 @@ void user_interface() {
 
 int main(int argc, char const *argv[]) {
     
-    // string filename = "Plain_text.txt";
-    string filename = "english_text.txt";
+    string filename = "Plain_text.txt";
+    // string filename = "english_text.txt";
     string message;
 
     read_message(filename, message);
@@ -401,11 +404,13 @@ int main(int argc, char const *argv[]) {
     cin >> key;
     cout << endl;
 
-    string key = "abcdrfg";
+    // string key = "abcdrfg";
 
     string cipher = vigenere(message, key, ENCRYPT);
 
     write_cipher("Cipher_text.txt", cipher);
+
+    // cout << "Decrypted: \n" << vigenere(cipher, key, DECRYPT) << endl;
 
     build_frequency_table();
 

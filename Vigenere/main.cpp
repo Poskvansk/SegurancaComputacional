@@ -393,22 +393,24 @@ void user_interface() {
 
 int main(int argc, char const *argv[]) {
     
-    string filename = "Plain_text.txt";
-    // string filename = "english_text.txt";
-    string message;
 
-    read_message(filename, message);
+    // // MUDAR NOME DO ARQUIVO TEXTO A SER LIDO AQUI
+    // string filename = "Plain_text.txt";
+    // // string filename = "english_text.txt";
+    // string message;
 
-    string key;
-    cout << "Enter key: ";
-    cin >> key;
-    cout << endl;
+    // read_message(filename, message);
 
-    // string key = "abcdrfg";
+    // string key;
+    // cout << "Enter key: ";
+    // cin >> key;
+    // cout << endl;
 
-    string cipher = vigenere(message, key, ENCRYPT);
+    // // string key = "abcdrfg";
 
-    write_cipher("Cipher_text.txt", cipher);
+    // string cipher = vigenere(message, key, ENCRYPT);
+
+    // write_cipher("Cipher_text.txt", cipher);
 
     // cout << "Decrypted: \n" << vigenere(cipher, key, DECRYPT) << endl;
 

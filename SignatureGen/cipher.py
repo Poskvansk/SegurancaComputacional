@@ -57,41 +57,52 @@ def gf_mod(a, b):
 
 def mix_columns(state):
 
-    aux = np.matrix([[2, 3, 1, 1],
-                     [1, 2, 3, 1],
-                     [1, 1, 2, 3],
-                     [3, 1, 1, 2]], dtype=np.ubyte)
+    state = np.matrix([
+        [0x87, 0xf2, 0x4d, 0x97],
+        [0x6e, 0x4c, 0x90, 0xec],
+        [0x46, 0xe7, 0x4a, 0xc3],
+        [0xa6, 0x8c, 0xd8, 0x95]
+    ])
 
-    column = state[:, [0]]
-    column = [ord(x[0]) for x in column]
+    mult_matrix = np.matrix([
+        [2, 3, 1, 1],
+        [1, 2, 3, 1],
+        [1, 1, 2, 3],
+        [3, 1, 1, 2]
+    ], dtype=np.ubyte)
 
-    aux = gf_mod(0x03, 0x6E)
-    print(hex(aux))
 
-    # column = np.matrix(column, dtype=np.ubyte).T
 
-    # column = [0x87, 0x6e, 0x46, 0xA6]
+    aux = state[:, 0].T 
+    column = []
+    temp = []
+    
+    for i in range(4):
+        column.append(aux[0, i])
 
-    # test = (0x02 * column[0]) ^( 0x03 * column[1]) ^ (0x01 * column[2]) ^ (0x01 * column[3])
-    # print("test = ", hex(test))
-    # for i in range(4):
-    #     print(hex(i))
+    aux = mult_matrix[0]
+    for i in range(4):
+        temp.append(aux[0, i])
 
-    # for i in range(4):
-        # s = [0, 0, 0, 0]
-        # for j in range(4):
-        #     s[j] = aux[i, j] * column[j]
+    print(column)
+    print(temp)
 
-        # test = s[0]
-        # for k in range(1, 4):
-        #     test ^= s[k]
-        # print(test)
+    res = []
 
-    # print(aux)
-    # print(column)
+    for i in range(4):
+        temp = []
+        for j in range(4):
+            s0 = 0
+            for k in range(4):
+                # print(hex(state[k, j]), " x ", hex(mult_matrix[j, k]))
+                s0 ^= gf_mod(state[k, i], mult_matrix[j,k] )
+            temp.append(s0)
+            print(temp)
+        res.append(temp)
+    
+    res = np.matrix(res, dtype=np.ubyte).T
+    print(res)
 
-    # res = np.dot(aux, column)
-   
     # print("-------------- MIX COLUMNS --------------")
     # print(res)
 

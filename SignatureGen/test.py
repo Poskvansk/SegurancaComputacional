@@ -7,7 +7,6 @@ def base64(data):
 
     return data
 
-print(int("a", 0))
 # print(base64("Olá, mundo!"))
 
 

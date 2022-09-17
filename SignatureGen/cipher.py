@@ -3,6 +3,7 @@ from re import A
 import numpy as np
 import mod
 
+np.set_printoptions(formatter={'int':chr})
 np.set_printoptions(formatter={'int':hex})
 
 #################################################
@@ -58,10 +59,12 @@ iv = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x
 
 key_bytes = bytearray(key)
 key_matrix = np.array(key_bytes, dtype=np.ubyte).reshape(4, 4).T
+key_schedule = np.zeros((4, 44), dtype=np.ubyte)
+
+iv_matrix = np.array(iv, dtype=np.ubyte).reshape(4, 4).T
 
 #################################################
 
-#################################################
 # DONE
 def subbytes(state):
 
@@ -82,9 +85,6 @@ def subbytes(state):
             row = state[i, j] >> 4
             col = state[i, j] & 0x0f
             res[i, j] = sbox[row, col]
-
-    # print("-------------- SUB BYTES --------------")
-    # print(res)
 
     return res
 
@@ -153,31 +153,11 @@ def mix_columns(state):
     
     res = np.matrix(res, dtype=np.ubyte).T
 
-    # print("-------------- MIX COLUMNS --------------")
-    # print(res)
-
     return state
 
-#################################################
-
-    # w = np.zeros((4, 44), dtype=np.ubyte)
-
-    # for i in range(4):
-    #     for j in range(4):
-    #         w[i, j] = key[i, j]
-
-    # for i in range(4, 44):
-    #     temp = w[:, i-1]
-
-    #     if(i % 4 == 0):
-    #         temp = np.roll(temp, -1)
-    #         temp = subbytes(temp)
-    #         temp = temp ^ rcon[i//4 - 1]
-
-    #     w[:, i] = w[:, i-4] ^ temp
-
-    # return w
 def key_expansion(key):
+
+    global key_schedule
 
     #test array
     # test = np.array([
@@ -203,11 +183,9 @@ def key_expansion(key):
 
     key = key_matrix
 
-    key_schedule = np.zeros((44, 4), dtype=np.ubyte)
+    key_schedule = key_schedule.T
     for i in range(4):
         key_schedule[i] = key.T[i]
-
-
 
     for i in range(4, 44):
         aux = key_schedule[i-1]
@@ -219,36 +197,31 @@ def key_expansion(key):
 
         key_schedule[i] = key_schedule[i-4] ^ aux
 
-
-    print("-------------- KEY EXPANSION --------------")
-    print(key_schedule)
-
     return key_schedule.T
 
-def add_round_key(state):
+def add_round_key(state, round):
 
-    state = np.array([
-        [0x47, 0x40, 0xa3, 0x4c],
-        [0x37, 0xd4, 0x70, 0x9f],
-        [0x94, 0xe4, 0x3a, 0x42],
-        [0xed, 0xa5, 0xa6, 0xbc]
-    ])
+    # state = np.array([
+    #     [0x47, 0x40, 0xa3, 0x4c],
+    #     [0x37, 0xd4, 0x70, 0x9f],
+    #     [0x94, 0xe4, 0x3a, 0x42],
+    #     [0xed, 0xa5, 0xa6, 0xbc]
+    # ])
 
-    round_key = np.array([
-        [0xac, 0x19, 0x28, 0x57],
-        [0x77, 0xfa, 0xd1, 0x5c],
-        [0x66, 0xdc, 0x29, 0x00],
-        [0xf3, 0x21, 0x41, 0x6a]
-    ])
+    # round_key = np.array([
+    #     [0xac, 0x19, 0x28, 0x57],
+    #     [0x77, 0xfa, 0xd1, 0x5c],
+    #     [0x66, 0xdc, 0x29, 0x00],
+    #     [0xf3, 0x21, 0x41, 0x6a]
+    # ])
 
-    res = state ^ round_key
+    round_key = key_schedule.T[round*4 : round*4 + 4].T
 
-    # print("-------------- ADD ROUND KEY --------------")
-    # print(res)
+    return state ^ round_key
 
-    pass
+#################################################
 
-def aes(nk = 4):
+def aes(msg, nk = 4):
 
     if(nk == 4):
         nr = 10
@@ -257,16 +230,27 @@ def aes(nk = 4):
     elif(nk == 8):
         nr = 14
     
+    global key_schedule
+    key_schedule = key_expansion(key_matrix)
+
+    msg ^= iv_matrix
+
+    state = add_round_key(msg, 0)
 
     for i in range(nr):
+        state = subbytes(state)
+        state = shift_rows(state)
         
-        subbytes()
-        shift_rows()
-
         if(i != nr-1):
-            mix_columns()
+            state = mix_columns(state)
 
-        add_round_key()
+        state = add_round_key(state, i+1)
+    
+    print("-------------- AES --------------")
+    print("initial msg")
+    print(msg)
+    print("final msg")
+    print(state)
 
 def main():
 
@@ -278,15 +262,9 @@ def main():
     aux = [ord(x) for x in msg]
 
     # Convert message to 4x4 matrix
-    state = np.array([list(msg[i:i+4]) for i in range(0, len(msg), 4)])
-    state = np.array(aux, dtype=np.ubyte).reshape(4, 4)
-    # print(state)
+    # state = np.array([list(msg[i:i+4]) for i in range(0, len(msg), 4)])
+    state = np.array(aux, dtype=np.ubyte).reshape(4, 4).T
 
-    # subbytes(state)
-    # state = shift_rows(state)
-    # state = mix_columns(state)
-    # add_round_key(state)
-
-    key_expansion(key_matrix)
+    aes(state)
 
 main()

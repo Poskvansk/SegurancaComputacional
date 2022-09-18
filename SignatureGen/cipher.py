@@ -55,13 +55,13 @@ inverse_sbox = np.array([
 
 # key = [0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA]
 key = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
-iv = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
+init_vector = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
 
 key_bytes = bytearray(key)
 key_matrix = np.array(key_bytes, dtype=np.ubyte).reshape(4, 4).T
 key_schedule = np.zeros((4, 44), dtype=np.ubyte)
 
-iv_matrix = np.array(iv, dtype=np.ubyte).reshape(4, 4).T
+iv_matrix = np.array(init_vector, dtype=np.ubyte).reshape(4, 4).T
 
 #################################################
 
@@ -85,6 +85,11 @@ def subbytes(state):
             row = state[i, j] >> 4
             col = state[i, j] & 0x0f
             res[i, j] = sbox[row, col]
+
+    print("state = ")
+    print(state)
+    print("------------------ SUBBYTES ------------------")
+    print(res)
 
     return res
 
@@ -201,27 +206,16 @@ def key_expansion(key):
 
 def add_round_key(state, round):
 
-    # state = np.array([
-    #     [0x47, 0x40, 0xa3, 0x4c],
-    #     [0x37, 0xd4, 0x70, 0x9f],
-    #     [0x94, 0xe4, 0x3a, 0x42],
-    #     [0xed, 0xa5, 0xa6, 0xbc]
-    # ])
-
-    # round_key = np.array([
-    #     [0xac, 0x19, 0x28, 0x57],
-    #     [0x77, 0xfa, 0xd1, 0x5c],
-    #     [0x66, 0xdc, 0x29, 0x00],
-    #     [0xf3, 0x21, 0x41, 0x6a]
-    # ])
-
     round_key = key_schedule.T[round*4 : round*4 + 4].T
+
+    print("round_key = ")
+    print(round_key)
 
     return state ^ round_key
 
 #################################################
 
-def aes(msg, nk = 4):
+def aes_ctr(msg, nk = 4):
 
     if(nk == 4):
         nr = 10
@@ -233,9 +227,16 @@ def aes(msg, nk = 4):
     global key_schedule
     key_schedule = key_expansion(key_matrix)
 
-    msg ^= iv_matrix
+    # nonce = np.array(init_vector[:8], dtype=np.ubyte)
+    # counter = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
 
-    state = add_round_key(msg, 0)
+    # nonce = np.append(nonce, counter)
+    # nonce = nonce.reshape(4,4).T
+
+    nonce = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+    nonce = np.array(nonce, dtype=np.ubyte).reshape(4,4).T
+
+    state = add_round_key(nonce, 0)
 
     for i in range(nr):
         state = subbytes(state)
@@ -246,15 +247,22 @@ def aes(msg, nk = 4):
 
         state = add_round_key(state, i+1)
     
-    print("-------------- AES --------------")
-    print("initial msg")
-    print(msg)
+    print(state)
+
+    # print(msg)
+    state = msg ^ state
+
+    print("-------------- AES_CTR --------------")
+    # print("initial msg")
+    # print(msg)
     print("final msg")
     print(state)
 
 def main():
 
     msg = "This is a messag"
+
+    # key = pow(2, 128)
 
     while(len(msg) % 16 != 0):
         msg += "X"    
@@ -265,6 +273,8 @@ def main():
     # state = np.array([list(msg[i:i+4]) for i in range(0, len(msg), 4)])
     state = np.array(aux, dtype=np.ubyte).reshape(4, 4).T
 
-    aes(state)
+    aes_ctr(state)
 
-main()
+
+if __name__ == "__main__":
+    main()

@@ -42,4 +42,7 @@ def keygen(n = 1024):
 
     return p, q, key
 
-keygen()
+if __name__ == "__main__":
+
+    p, q, key = keygen()
+    print(hex(key))

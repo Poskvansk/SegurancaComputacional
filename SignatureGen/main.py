@@ -1,9 +1,36 @@
-#include <iostream>
-#include <cmath>
+from traceback import print_tb
+import cipher
+import keygen
+import signature
 
-//main print number 2 ^1024
-int main() {
-    int x = 100;
-    std::cout << pow(2, 1024) -1 << std::endl;
-    return 0;
-}
+def get_message(msg):
+    pass
+
+
+
+if __name__ == "__main__":
+
+    p, q, key = keygen.keygen()
+    # print(hex(key))
+
+    print("-------------- RSA --------------")
+    print("Qual mensagme deseja encriptar?")
+    msg = input()
+    print("---------------------------------\n")
+
+    msg_sha = signature.sha3(msg.encode())
+
+    print(bytes(100))
+
+
+    # encrypt hash with private key
+    # send message and encrypted hash
+    # get message and encrypted hash
+    # decrypt hash
+    # hash message
+    # compare hashes
+
+    # encrypt with aes
+    # decrypt with aes
+
+    pass

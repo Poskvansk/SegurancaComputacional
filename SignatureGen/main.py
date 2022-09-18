@@ -20,7 +20,6 @@ if __name__ == "__main__":
 
     msg_sha = signature.sha3(msg.encode())
 
-    print(bytes(100))
 
 
     # encrypt hash with private key

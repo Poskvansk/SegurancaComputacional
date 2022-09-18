@@ -1,5 +1,8 @@
 import hashlib
 import numpy as np
+import random
+
+import mod
 
 def ctob64(c):
     if (c <= 25): return c + 65
@@ -83,6 +86,12 @@ def base64_encode(msg):
 
 def verify(msg, sig):
 
+    msg = base64_decode(msg)
+    # sig = base64_decode(sig)
+
+    # print(msg)
+    # print(sig)
+    
     m = hashlib.sha3_256()
     m.update(msg.encode())
     print(m.hexdigest())

@@ -2,6 +2,7 @@ from traceback import print_tb
 import cipher
 import keygen
 import signature
+import verify
 
 def get_message(msg):
     pass
@@ -10,26 +11,29 @@ def get_message(msg):
 
 if __name__ == "__main__":
 
-    p, q, key = keygen.keygen()
-    # print(hex(key))
+    pbk, pvk = keygen.keygen()
 
-    print("-------------- RSA --------------")
+    # print("Public key: ", pbk)
+    # print("Private key: ", pvk)
+
     print("Qual mensagme deseja encriptar?")
-    msg = input()
+    # msg = input()
+    msg = "This is a message"
+    print("Mensagem: ", msg)
     print("---------------------------------\n")
 
-    msg_sha = signature.sha3(msg.encode())
+    cipher = cipher.aes_ctr(msg)
+    print("Mensagem encriptada: ", cipher)
+    
+    str = ""
+    for i in cipher:    
+        aux = ''.join([chr(x) for x in i])
+        str += aux
+        
+    print(str)
 
+    b64 = verify.base64_encode(str)
+    print(b64)
 
-
-    # encrypt hash with private key
-    # send message and encrypted hash
-    # get message and encrypted hash
-    # decrypt hash
-    # hash message
-    # compare hashes
-
-    # encrypt with aes
-    # decrypt with aes
-
-    pass
+    # msg_sha = signature.sha3(msg.encode())
+    # print(msg_sha.hexdigest())

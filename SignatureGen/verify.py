@@ -80,7 +80,6 @@ def base64_encode(msg):
         res = ''.join(res)
         encoded += res
 
-    print(encoded)
     return encoded
 
 

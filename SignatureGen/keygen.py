@@ -49,11 +49,11 @@ def keygen(n = 1024):
 
     p = 0
     q = 0
-    while not miller_rabin(p):
-        p = random.randrange(2**( n-1) +1, 2**n)
+    # while not miller_rabin(p):
+    #     p = random.randrange(2**( n-1) +1, 2**n)
 
-    while not miller_rabin(q):
-        q = random.randrange(2**(n-1) +1, 2**n)
+    # while not miller_rabin(q):
+    #     q = random.randrange(2**(n-1) +1, 2**n)
 
     #test values    
     p = 0xef806b6f570d78f334e1e76063e8edb8190f165c6ded0c896d9fc7b27771440591899afb66c5f4c795ac2490b5d5a7af6d288b1835769f71859b2acdd34753a5e1bbb2abd6022d3ed653fc3d410a7aa6e1247f211f719a35dcd32f0190ac1f3f255060ef3c0ca5cb9954aca6955b1a22b017be2c07b4ac7e3e0c826dee0e65dd

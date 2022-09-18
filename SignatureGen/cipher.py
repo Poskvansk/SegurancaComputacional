@@ -67,16 +67,6 @@ iv_matrix = np.array(init_vector, dtype=np.ubyte).reshape(4, 4).T
 
 # DONE
 def subbytes(state):
-
-    # test = np.array([
-
-    #     [0xea, 0x04, 0x65, 0x85],
-    #     [0x83, 0x45, 0x5d, 0x96],
-    #     [0x5c, 0x33, 0x98, 0xb0],
-    #     [0xf0, 0x2d, 0xad, 0xc5]
-    # ])
-    # state = test
-
     res = np.zeros((4, 4), dtype=np.ubyte)
 
     for i in range(4):
@@ -85,11 +75,6 @@ def subbytes(state):
             row = state[i, j] >> 4
             col = state[i, j] & 0x0f
             res[i, j] = sbox[row, col]
-
-    print("state = ")
-    print(state)
-    print("------------------ SUBBYTES ------------------")
-    print(res)
 
     return res
 
@@ -128,16 +113,6 @@ def gf_mod(a, b):
     return res
 
 def mix_columns(state):
-
-    # TEST ARRAY
-    # test = np.array([
-    #     [0x87, 0xf2, 0x4d, 0x97],
-    #     [0x6e, 0x4c, 0x90, 0xec],
-    #     [0x46, 0xe7, 0x4a, 0xc3],
-    #     [0xa6, 0x8c, 0xd8, 0x95]
-    # ])
-    # state = test
-
     mult_matrix = np.array([
         [2, 3, 1, 1],
         [1, 2, 3, 1],
@@ -208,14 +183,18 @@ def add_round_key(state, round):
 
     round_key = key_schedule.T[round*4 : round*4 + 4].T
 
-    print("round_key = ")
-    print(round_key)
-
     return state ^ round_key
 
 #################################################
 
 def aes_ctr(msg, nk = 4):
+
+    while(len(msg) % 16 != 0):
+        msg += chr(0)
+
+    print("Message: ", msg)
+
+    aux = [ord(x) for x in msg]
 
     if(nk == 4):
         nr = 10
@@ -224,6 +203,11 @@ def aes_ctr(msg, nk = 4):
     elif(nk == 8):
         nr = 14
     
+    blocks = np.zeros((len(msg)//16, 16), dtype=np.ubyte)
+
+    for i in range(0, len(msg), 16):
+        blocks[i//16] = aux[i:i+16]
+
     global key_schedule
     key_schedule = key_expansion(key_matrix)
 
@@ -233,30 +217,29 @@ def aes_ctr(msg, nk = 4):
     # nonce = np.append(nonce, counter)
     # nonce = nonce.reshape(4,4).T
 
-    nonce = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
-    nonce = np.array(nonce, dtype=np.ubyte).reshape(4,4).T
+    # nonce = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+    # nonce = np.array(nonce, dtype=np.ubyte).reshape(4,4).T
 
-    state = add_round_key(nonce, 0)
+    # state = add_round_key(nonce, 0)
+    for i in range(len(blocks)):
 
-    for i in range(nr):
-        state = subbytes(state)
-        state = shift_rows(state)
+        state = np.array(blocks[i], dtype=np.ubyte).reshape(4, 4).T
+
+        state = add_round_key(state, 0)
+
+        for j in range(nr):
+            state = subbytes(state)
+            state = shift_rows(state)
+            
+            if(j != nr-1):
+                state = mix_columns(state)
+
+            state = add_round_key(state, j+1)
         
-        if(i != nr-1):
-            state = mix_columns(state)
+        blocks[i] = state.T.reshape(16)
+        # blocks[i] = state.reshape(16)
 
-        state = add_round_key(state, i+1)
-    
-    print(state)
-
-    # print(msg)
-    state = msg ^ state
-
-    print("-------------- AES_CTR --------------")
-    # print("initial msg")
-    # print(msg)
-    print("final msg")
-    print(state)
+    return blocks
 
 def main():
 

@@ -4,7 +4,8 @@ def sha3(msg):
     m = hashlib.sha3_256()
     m.update(msg)
     # print(m.hexdigest())
-    return m.digest()
+
+    return m
 
 
 def oaep():

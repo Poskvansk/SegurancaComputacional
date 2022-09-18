@@ -7,7 +7,44 @@ def ctob64(c):
     if (c <= 61): return c - 4
     if (c == 62): return 43
     if (c == 63): return 47
+    return 0
     
+def b64toc(b):
+    if (b >= 65 and b <= 90): return b - 65
+    if (b >= 97 and b <= 122): return b - 71
+    if (b >= 48 and b <= 57): return b + 4
+    if (b == 43): return 62
+    if (b == 47): return 63
+    return 0
+
+
+def base64_decode(msg):
+    
+        decoded = ""
+    
+        for i in range(0, len(msg), 4):
+    
+            slice = np.zeros(4, dtype=np.ubyte)
+    
+            aux = msg[i:i+4]
+
+            for i in range(len(aux)):
+                slice[i] = ord(aux[i])
+                slice[i] = b64toc(slice[i])
+    
+            decode = np.zeros(3, dtype=np.ubyte)
+
+            decode[0] = (slice[0] << 2) | (slice[1] >> 4)
+            decode[1] = ((slice[1] & 0xf) << 4) | (slice[2] >> 2)
+            decode[2] = ((slice[2] & 0x3) << 6) | slice[3]
+    
+            res = [chr(c) for c in decode]
+
+            res = ''.join(res)
+            decoded += res
+    
+        decoded = decoded.rstrip('\0')
+        return decoded
 
 def base64_encode(msg):
 
@@ -58,6 +95,4 @@ if __name__ == '__main__':
     
     # msg = "This is a messag"
     # verify(msg, 0)
-
-    base64_encode('Man is distinguished, not only by his reason')
-    base64_encode('Man')
+    pass

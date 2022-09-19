@@ -62,9 +62,7 @@ def keygen(n = 1024):
     public_key = get_encryption_key(p, q)
     private_key = get_decryption_key(public_key.__int__(), p, q)
 
+    # public_key = (public_key.__int__(), public_key.modulus)
+    # private_key = (private_key.__int__(), private_key.modulus)
+
     return public_key, private_key
-
-
-if __name__ == "__main__":
-
-    keygen()

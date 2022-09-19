@@ -1,7 +1,5 @@
-from ast import Mod
-from re import A
 import numpy as np
-import mod
+import random
 
 np.set_printoptions(formatter={'int':chr})
 np.set_printoptions(formatter={'int':hex})
@@ -29,7 +27,7 @@ sbox = np.array([
 ])
 
 # AES INVERSE S-BOX
-inverse_sbox = np.array([
+sbox_inv = np.array([
     [0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
     [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],
     [0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e],
@@ -50,18 +48,15 @@ inverse_sbox = np.array([
 #################################################
 # GLOBAL VARIABLES
 
-# key = 0xF0CAF0FAF0CAF0FAF0CAF0FAF0CAF0FA
-# iv = 0x000102030405060708090a0b0c0d0e0f
+key = 0x000102030405060708090a0b0c0d0e0f
+iv = 0x000102030405060708090a0b0c0d0e0f
 
-# key = [0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA, 0xF0, 0xCA, 0xF0, 0xFA]
-key = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
-init_vector = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
+key_bytes = np.array([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f], dtype=np.ubyte)
 
-key_bytes = bytearray(key)
 key_matrix = np.array(key_bytes, dtype=np.ubyte).reshape(4, 4).T
 key_schedule = np.zeros((4, 44), dtype=np.ubyte)
 
-iv_matrix = np.array(init_vector, dtype=np.ubyte).reshape(4, 4).T
+# iv_matrix = np.array(init_vector, dtype=np.ubyte).reshape(4, 4).T
 
 #################################################
 
@@ -185,15 +180,41 @@ def add_round_key(state, round):
 
     return state ^ round_key
 
-#################################################
+def set_key(size = 128):
 
-def aes_ctr(msg, nk = 4):
+    global key_bytes
+    global key
+    global key_matrix
+
+    key = random.randrange(2**( size-1) +1, 2**size)
+
+    for i in range(16):
+        key_bytes[i] = (key >> (8*(15-i))) & 0xff
+
+    key_matrix = np.array(key_bytes, dtype=np.ubyte).reshape(4, 4).T
+
+
+def aes_ctr(msg):
+
+    set_key()
+
+    # UNCOMMENT BELOW  TO SHOW GENERATED KEY
+    # print('-----------------------------------')
+    # print('key = ' + hex(key))
+    # print(key_bytes)
+    # print('-----------------------------------')
 
     while(len(msg) % 16 != 0):
         msg += chr(0)
 
-    print("Message: ", msg)
-
+    nk = 0
+    if key_bytes.__len__() == 16:
+        nk = 4
+    elif key_bytes.__len__() == 24:
+        nk = 6
+    elif key_bytes.__len__() == 32:
+        nk = 8
+    
     aux = [ord(x) for x in msg]
 
     if(nk == 4):
@@ -241,23 +262,84 @@ def aes_ctr(msg, nk = 4):
 
     return blocks
 
-def main():
+#################################################
 
-    msg = "This is a messag"
+# DECRIPT
+ 
+def inv_shift_rows(state):
 
-    # key = pow(2, 128)
+    for i in range(1, 4):
+        state[i] = np.roll(state[i], i)
 
-    while(len(msg) % 16 != 0):
-        msg += "X"    
+    return state
 
-    aux = [ord(x) for x in msg]
+def inv_subbytes(state):
+    
+        for i in range(4):
+            for j in range(4):
+                state[i,j] = sbox_inv[state[i,j] >> 4, state[i,j] & 0x0f]
+    
+        return state
 
-    # Convert message to 4x4 matrix
-    # state = np.array([list(msg[i:i+4]) for i in range(0, len(msg), 4)])
-    state = np.array(aux, dtype=np.ubyte).reshape(4, 4).T
+def inv_mix_columns(state):
+    mult_matrix = np.array([
+        [0x0e, 0x0b, 0x0d, 0x09],
+        [0x09, 0x0e, 0x0b, 0x0d],
+        [0x0d, 0x09, 0x0e, 0x0b],
+        [0x0b, 0x0d, 0x09, 0x0e]
+    ], dtype=np.ubyte)
 
-    aes_ctr(state)
+    res = []
 
+    for i in range(4):
+        temp = []
+        for j in range(4):
+            s0 = 0
+            for k in range(4):
+                s0 ^= gf_mod(state[k, i], mult_matrix[j,k] )
+            temp.append(s0)
+        res.append(temp)
+    
+    res = np.matrix(res, dtype=np.ubyte).T
 
-if __name__ == "__main__":
-    main()
+    return state
+
+def aes_ctr_decrypt(msg, nk = 4):
+
+    print("-------------------- DECRYPT --------------------")
+
+    msg = [ord(x) for x in msg]
+
+    if(nk == 4):
+        nr = 10
+    elif(nk == 6):
+        nr = 12
+    elif(nk == 8):
+        nr = 14
+
+    blocks = np.zeros((len(msg)//16, 16), dtype=np.ubyte)
+
+    for i in range(0, len(msg), 16):
+        blocks[i//16] = msg[i:i+16]
+
+    global key_schedule
+    key_schedule = key_expansion(key_matrix)
+
+    for i in range(len(blocks)):
+
+        state = np.array(blocks[i], dtype=np.ubyte).reshape(4, 4).T
+
+        state = add_round_key(state, nr)
+
+        for j in range(nr):
+            state = inv_shift_rows(state)
+            state = inv_subbytes(state)
+            state = add_round_key(state, nr-j-1)
+
+            if(j != nr-1):
+                state = inv_mix_columns(state)
+        
+        blocks[i] = state.T.reshape(16)
+        # blocks[i] = state.reshape(16)
+
+    return blocks

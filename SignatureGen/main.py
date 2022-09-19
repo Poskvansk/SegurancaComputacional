@@ -103,8 +103,8 @@ if __name__ == "__main__":
     # print("Private key: ", pvk)
 
     print("Qual mensagme deseja encriptar?")
-    # msg = input()
-    msg = "This is a message"
+    msg = input()
+    # msg = "This is a message"
     print("Mensagem: ", msg)
     print('-'*30)
 
@@ -118,12 +118,13 @@ if __name__ == "__main__":
     print('-'*30)
 
     sig = signature.sign(msg, pvk)
-
+    
+    ######################################## DECRYPT
     received_msg = base64_decode(b64)
     decrypted = cipher.aes_ctr_decrypt(received_msg)
-    res = bytes_to_string(decrypted)
+    decrypted = bytes_to_string(decrypted)    
+    decrypted = decrypted.rstrip('\0')
     
-    res = res.rstrip('\0')
-    print("Mensagem decriptada: ", res)
+    print("Mensagem decriptada: ", decrypted)
 
-    signature.verify_signature(res, sig, pbk)
+    signature.verify_signature(decrypted, sig, pbk)

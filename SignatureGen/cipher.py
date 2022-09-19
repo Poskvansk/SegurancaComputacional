@@ -163,11 +163,15 @@ def key_expansion(key):
         key_schedule[i] = key.T[i]
 
     for i in range(4, 44):
+
         aux = key_schedule[i-1]
+
         if(i % 4 == 0):
             aux = np.roll(aux, -1)
+
             for j in range(4):
                 aux[j] = sbox[aux[j] >> 4, aux[j] & 0x0f]
+                
             aux ^= rcon[i//4 -1]
 
         key_schedule[i] = key_schedule[i-4] ^ aux
